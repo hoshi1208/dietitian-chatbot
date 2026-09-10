@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>天使大学WINGs 栄養士・管理栄養士AIサポート</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --g: #00b900;
+      --gd: #009000;
+      --bg: #f0f0f0;
+      --sub: #888;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      max-width: 600px;
+      margin: 0 auto;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hd {
+      background: var(--g);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .hd-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, .2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .hd-title {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .hd-sub {
+      font-size: 11px;
+      opacity: .85;
+    }
+
+    .msgs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .msg {
+      display: flex;
+      align-items: flex-end;
+      gap: 7px;
+      max-width: 88%;
+      animation: fi .25s ease;
+    }
+
+    @keyframes fi {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .ai-msg {
+      align-self: flex-start;
+    }
+
+    .usr-msg {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .av {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8f5e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .bubble {
+      padding: 11px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.65;
+      position: relative;
+      word-break: break-word;
+    }
+
+    .ai-msg .bubble {
+      background: #fff;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .07);
+    }
+
+    .usr-msg .bubble {
+      background: var(--g);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .ts {
+      font-size: 10px;
+      color: var(--sub);
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .usr-msg .ts {
+      color: rgba(255, 255, 255, .7);
+    }
+
+    .proc-wrap {
+      background: #fff;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      padding: 10px 14px;
+      font-size: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .07);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .proc-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #555;
+    }
+
+    .typing {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 2px 0;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #aaa;
+      animation: ba 1.2s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes ba {
+      0%, 80%, 100% { transform: scale(0.6); opacity: .4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .banner {
+      background: #fff3cd;
+      border-top: 1px solid #ffeeba;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #856404;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .banner-btn {
+      background: #ff6b35;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    .in-wrap {
+      background: #fff;
+      padding: 8px 10px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      border-top: 1px solid #e0e0e0;
+      flex-shrink: 0;
+    }
+
+    .in-ta {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      max-height: 110px;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    .in-ta:focus {
+      border-color: var(--g);
+    }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--g);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+
+    .send-btn:disabled {
+      background: #ccc;
+      cursor: default;
+    }
+
+    /* モーダル */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .form-grp {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-grp label {
+      font-size: 12px;
+      color: #555;
+      font-weight: bold;
+    }
+
+    .form-grp input,
+    .form-grp textarea {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .form-grp input:focus,
+    .form-grp textarea:focus {
+      border-color: var(--g);
+    }
+
+    .submit-btn {
+      background: #ff6b35;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: default;
+    }
+
+    .done-box {
+      text-align: center;
+      padding: 24px 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 学籍番号オーバーレイ -->
+  <div id="login-overlay" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); text-align:center; max-width:400px; width:100%;">
+      <div style="font-size:20px; font-weight:bold; color:var(--g); margin-bottom:15px;">AIサポートへようこそ</div>
+      <div style="font-size:14px; color:#555; margin-bottom:20px; line-height:1.6;">
+        ご利用の前に、学籍番号の末尾を入力してください。<br>
+        <span style="font-size:12px; color:#888;">(番号は2桁までの数字のみの入力で、<br>入力例: 2020B001 → 1 と入力してください)</span>
+      </div>
+      <input type="text" id="student-num-input" maxlength="2" pattern="\d*" placeholder="例: 1" style="font-size:24px; padding:10px; width:100px; text-align:center; border:2px solid #ccc; border-radius:8px; margin-bottom:20px; outline:none;">
+      <br>
+      <button onclick="startChat()" style="background:var(--g); color:#fff; border:none; padding:12px 30px; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer;">チャットを開始する</button>
+    </div>
+  </div>
+
+  <!-- ヘッダー -->
+  <div class="hd">
+    <div class="hd-icon">🎓</div>
+    <div style="flex:1;">
+      <div class="hd-title" id="app-title">天使大学WINGs 栄養士・管理栄養士AIサポート</div>
+      <div class="hd-sub" id="app-subtitle">本サービスは突然停止する場合があります。予めご了承ください。</div>
+    </div>
+    <button onclick="showInquiry()" style="background:#ff6b35; border:none; color:#fff; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,.1);">💬 お問い合わせ</button>
+  </div>
+
+  <!-- メッセージ一覧 -->
+  <div class="msgs" id="msgs">
+    <div class="msg ai-msg">
+      <div class="av">🤖</div>
+      <div class="bubble">
+        こんにちは！天使大学AIサポートです。<br>
+        栄養士免許申請・管理栄養士受験申請について分からないことがあれば入力してください。<br>
+        主に質問できるのは申請書類についてです。<br>
+        ※AIの利用が混雑している場合は、時間をあらためてご質問ください。<br><br>
+        ※個人情報が含まれる内容は入力しないようにお願いします。<br>
+        <div class="ts" id="t0"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="banner" id="banner">
+    <div class="banner-txt">⚠️ この質問は資料から回答できません。職員へ直接問い合わせますか？</div>
+    <button class="banner-btn" onclick="showInquiry()">💬 お問合せフォーム</button>
+  </div>
+
+  <!-- 入力エリア -->
+  <div class="in-wrap">
+    <textarea id="q" class="in-ta" rows="1" placeholder="質問を入力してください…" onkeydown="kd(event)" oninput="resize(this)"></textarea>
+    <button id="sendbtn" class="send-btn" onclick="send()">➤</button>
+  </div>
+
+  <!-- お問い合わせモーダル -->
+  <div class="modal" id="inq">
+    <div class="modal-box">
+      <div class="modal-title">
+        <span>職員へのお問い合わせ</span>
+        <button class="close-btn" onclick="hide('inq')">×</button>
+      </div>
+      <div style="font-size:12px; color:#666; background:#f9f9f9; padding:8px; border-radius:6px;">
+        <strong>直前の質問:</strong> <span id="disp-q"></span><br>
+        <strong>AIの回答:</strong> <span id="disp-ai" style="display:inline-block; max-height:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+      </div>
+      <div class="form-grp">
+        <label>氏名 <span style="color:red;">*</span></label>
+        <input type="text" id="fm-name" placeholder="天使 太郎" oninput="checkInqForm()">
+      </div>
+      <div class="form-grp">
+        <label>メールアドレス <span style="color:red;">*</span></label>
+        <input type="email" id="fm-email" placeholder="example@tenshi.ac.jp" oninput="checkInqForm()">
+      </div>
+      <div class="form-grp">
+        <label>詳しい内容・補足メッセージ</label>
+        <textarea id="add-msg" rows="3" placeholder="質問の補足や状況を詳しく記載してください"></textarea>
+      </div>
+      <div class="form-grp">
+        <label>添付ファイル（任意・最大5個）</label>
+        <input type="file" id="file-input" multiple onchange="handleFileSelect(this)">
+        <div id="file-list" style="font-size:11px; margin-top:4px;"></div>
+      </div>
+      <button id="subbtn" class="submit-btn" disabled onclick="submitInq()">📨 送　信</button>
+    </div>
+  </div>
+
+  <!-- 完了モーダル -->
+  <div class="modal" id="done">
+    <div class="modal-box done-box">
+      <div style="font-size:40px; margin-bottom:10px;">✅</div>
+      <div style="font-size:18px; font-weight:bold; margin-bottom:8px;">送信が完了しました</div>
+      <div style="font-size:13px; color:#555; margin-bottom:14px;">
+        担当職員が内容を確認次第、入力いただいたメールアドレスへご連絡いたします。<br>
+        <strong id="done-id" style="color:var(--g);"></strong>
+      </div>
+      <button class="submit-btn" style="background:var(--g);" onclick="hide('done')">チャットに戻る</button>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================
+    // ★★★ 設定: GASデプロイ後の Web API URL ★★★
+    // ========================================================
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1ZZSoY_d_Pukxxeu35CDQll1580agpEVq5IvgfLDMayPhTVnr91-hLde9Q77sydZp-g/exec";
+
+    let curQ = "", curAI = "", studentNumber = "anonymous";
+    let chatTurns = 0;
+    const robotIconHtml = '<div class="av">🤖</div>';
+
+    document.getElementById("t0").textContent = hm();
+
+    function startChat() {
+      const input = document.getElementById("student-num-input").value.trim();
+      if (!/^\d{1,2}$/.test(input)) {
+        alert("1桁または2桁の数字を入力してください。");
+        return;
+      }
+      studentNumber = input;
+      document.getElementById("login-overlay").style.display = "none";
+      // 起動通知（非同期で送信）
+      callGasApi("notifyLaunch", {}).catch(() => {});
+    }
+
+    // ===== GAS API通信共通関数 (fetch POST) =====
+    async function callGasApi(action, data = {}) {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" }, // GASのCORS制約回避のためtext/plain
+        body: JSON.stringify({ action, ...data })
+      });
+      return await res.json();
+    }
+
+    // ===== 送信処理 =====
+    async function send() {
+      const ta = document.getElementById("q"), q = ta.value.trim();
+      if (!q) return;
+
+      addMsg("usr", q);
+      ta.value = ""; resize(ta);
+      document.getElementById("sendbtn").disabled = true;
+      document.getElementById("banner").style.display = "none";
+      curQ = q;
+      chatTurns++;
+
+      const tid = addTyping();
+
+      try {
+        // Step1: チャンク検索
+        const sr = await callGasApi("searchChunks", { question: q });
+        if (!sr.ok) {
+          updateProc(tid, null, "❌ 検索エラー: " + (sr.msg || "不明"));
+          document.getElementById("sendbtn").disabled = false;
+          return;
+        }
+
+        updateProc(tid, sr, null);
+
+        // Step2: 回答生成
+        const chunkIds = JSON.stringify(sr.chunks.map(c => c.chunk_id));
+        const ar = await callGasApi("generateFromChunks", {
+          question: q,
+          chunkIdsJson: chunkIds,
+          studentNumber: studentNumber
+        });
+
+        rmTyping(tid);
+        curAI = ar.ok ? ar.answer : (ar.msg || "エラーが発生しました");
+        addAI(curAI, ar.ok ? ar.confidence : 0, ar.ok ? ar.retried : 0, sr.mode, sr.chunks.length, ar.ok ? ar.suggestions : []);
+
+        const isNoInfo = curAI.includes("詳細な回答をご案内できない") || curAI.includes("担当部署へご確認") || (ar.needStaff && sr.chunks.length === 0);
+        const wantsStaff = /個別|相談|問[い合]わせ|担当|職員|窓口|対応して/.test(q);
+
+        if (isNoInfo || wantsStaff) {
+          setTimeout(() => { addInquiryBubble(); }, 600);
+        } else if (chatTurns >= 3) {
+          setTimeout(() => { addInquiryBubble(); }, 600);
+        }
+
+      } catch (err) {
+        rmTyping(tid);
+        curAI = "通信エラーが発生しました。ネットワーク環境をご確認ください。";
+        addAI(curAI, 0, 0, null, 0, []);
+      } finally {
+        document.getElementById("sendbtn").disabled = false;
+      }
+    }
+
+    // ===== バブルUI =====
+    function addTyping() {
+      const d = document.createElement("div");
+      const id = "ty" + Date.now();
+      d.id = id; d.className = "msg ai-msg";
+      d.innerHTML = `${robotIconHtml}
+        <div class="proc-wrap" id="pw${id}">
+          <div class="proc-step"><span class="ico">🔍</span>資料を検索中…</div>
+          <div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>`;
+      document.getElementById("msgs").appendChild(d); scroll(); return id;
+    }
+
+    function updateProc(tid, sr, errMsg) {
+      const pw = document.getElementById("pw" + tid);
+      if (!pw) return;
+      if (errMsg) {
+        pw.innerHTML = `<div class="proc-step"><span class="ico">❌</span>${esc(errMsg)}</div>`;
+        return;
+      }
+      pw.innerHTML = `
+        <div class="proc-step"><span class="ico">🤖</span>回答を生成中…</div>
+        <div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+      scroll();
+    }
+
+    function rmTyping(id) { const e = document.getElementById(id); if (e) e.remove(); }
+
+    function addAI(text, conf, retried, mode, chunkCount, suggestions = []) {
+      let sugHtml = "";
+      if (suggestions && suggestions.length > 0) {
+        sugHtml = `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:11px;color:#666;">💡 もしかして：</div>
+          ${suggestions.map(s => `<button style="text-align:left;background:#f5f5f5;border:1px solid #ddd;padding:7px 11px;border-radius:12px;font-size:12px;cursor:pointer;color:#1a237e;" onclick="copyQ('${esc(s).replace(/'/g, "\\'")}')">${esc(s)}</button>`).join("")}
+        </div>`;
+      }
+
+      function renderAnswerText(rawText) {
+        let html = esc(rawText).replace(/\n/g, "<br>");
+        html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#1565c0;text-decoration:underline;">$1</a>');
+        return html;
+      }
+
+      const evalId = "eval-" + Date.now();
+      const evalHtml = `<div id="${evalId}" style="margin-top:14px; font-size:12px; background:#f5f5f5; padding:10px; border-radius:12px; border:1px solid #eee;">
+        <div style="color:#555; margin-bottom:8px; font-weight:bold;">この回答は役に立ちましたか？</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button onclick="evalAnswer('${evalId}', 'とてもよかった')" style="padding:6px 10px; border:none; background:#e3f2fd; border-radius:6px; cursor:pointer; color:#1565c0; font-weight:bold;">とてもよかった</button>
+          <button onclick="evalAnswer('${evalId}', 'よかった')" style="padding:6px 10px; border:none; background:#e8f5e9; border-radius:6px; cursor:pointer; color:#2e7d32; font-weight:bold;">よかった</button>
+          <button onclick="evalAnswer('${evalId}', 'あまりよくない')" style="padding:6px 10px; border:none; background:#fff3e0; border-radius:6px; cursor:pointer; color:#e65100; font-weight:bold;">あまりよくない</button>
+          <button onclick="evalAnswer('${evalId}', 'よくない')" style="padding:6px 10px; border:none; background:#ffebee; border-radius:6px; cursor:pointer; color:#c62828; font-weight:bold;">よくない</button>
+        </div>
+        <div id="${evalId}-msg" style="margin-top:8px; color:#2e7d32; font-weight:bold; font-size:11px;"></div>
+      </div>`;
+
+      const d = document.createElement("div");
+      d.className = "msg ai-msg";
+      d.innerHTML = `${robotIconHtml}
+        <div class="bubble">
+          ${renderAnswerText(text)}
+          ${sugHtml}
+          ${evalHtml}
+          <div class="ts">${hm()}</div>
+        </div>`;
+      document.getElementById("msgs").appendChild(d); scroll();
+    }
+
+    function copyQ(txt) {
+      const ta = document.getElementById("q");
+      ta.value = txt; ta.focus(); resize(ta);
+    }
+
+    async function evalAnswer(id, rating) {
+      const msgEl = document.getElementById(id + "-msg");
+      if (msgEl) {
+        msgEl.innerHTML = `✅ 評価を送信しました（${rating}）`;
+        setTimeout(() => { msgEl.innerHTML = ""; }, 3000);
+      }
+      if (rating === "とてもよかった" || rating === "よかった") {
+        callGasApi("saveGoodFeedback", { question: curQ, answer: curAI, rating }).catch(() => {});
+      }
+    }
+
+    // ===== 添付ファイルとお問い合わせ =====
+    let uploadFilesList = [];
+    function handleFileSelect(input) {
+      const files = input.files;
+      if (!files || files.length === 0) return;
+      if (uploadFilesList.length + files.length > 5) {
+        alert("写真や添付ファイルは最大5つまでです。");
+        input.value = ""; return;
+      }
+      for (let i = 0; i < files.length; i++) uploadFilesList.push(files[i]);
+      input.value = "";
+      renderFileList();
+    }
+
+    function removeFile(index) {
+      uploadFilesList.splice(index, 1);
+      renderFileList();
+    }
+
+    function renderFileList() {
+      const listEl = document.getElementById("file-list");
+      if (uploadFilesList.length === 0) { listEl.innerHTML = ""; return; }
+      let html = "<strong>選択中のファイル:</strong><ul style='list-style:none; padding-left:0; margin-top:5px;'>";
+      uploadFilesList.forEach((f, i) => {
+        html += `<li style="margin-bottom:4px; display:flex; justify-content:space-between;">
+          <span>${esc(f.name)}</span>
+          <button type="button" onclick="removeFile(${i})" style="color:red; background:none; border:none; cursor:pointer;">削除</button>
+        </li>`;
+      });
+      html += "</ul>";
+      listEl.innerHTML = html;
+    }
+
+    function checkInqForm() {
+      const name = document.getElementById("fm-name").value.trim();
+      const em = document.getElementById("fm-email").value.trim();
+      document.getElementById("subbtn").disabled = !(name && em);
+    }
+
+    function showInquiry() {
+      document.getElementById("disp-q").textContent = curQ;
+      document.getElementById("disp-ai").textContent = curAI;
+      document.getElementById("add-msg").value = "";
+      uploadFilesList = [];
+      renderFileList();
+      checkInqForm();
+      show("inq");
+    }
+
+    async function submitInq() {
+      const btn = document.getElementById("subbtn");
+      const sName = document.getElementById("fm-name").value.trim();
+      const sEmail = document.getElementById("fm-email").value.trim();
+      const msg = document.getElementById("add-msg").value;
+
+      btn.disabled = true; btn.textContent = "送信中…";
+
+      const fileDataArray = [];
+      for (const f of uploadFilesList) {
+        const base64 = await new Promise((res) => {
+          const r = new FileReader();
+          r.onload = e => res(e.target.result.split(",")[1]);
+          r.readAsDataURL(f);
+        });
+        fileDataArray.push({ name: f.name, mimeType: f.type, data: base64 });
+      }
+
+      try {
+        const r = await callGasApi("submitInquiry", {
+          question: curQ,
+          aiAnswer: curAI,
+          addMsg: msg,
+          studentName: sName,
+          studentEmail: sEmail,
+          files: fileDataArray
+        });
+
+        if (r.ok) {
+          document.getElementById("done-id").textContent = "受付番号: " + r.id;
+          hide("inq"); show("done");
+        } else {
+          alert(r.msg || "送信に失敗しました");
+        }
+      } catch(err) {
+        alert("通信エラーが発生しました");
+      } finally {
+        btn.disabled = false; btn.textContent = "📨 送　信";
+      }
+    }
+
+    function addMsg(type, text) {
+      const d = document.createElement("div");
+      d.className = "msg " + (type === "usr" ? "usr-msg" : "ai-msg");
+      d.innerHTML = type === "usr"
+        ? `<div class="bubble">${esc(text).replace(/\n/g, "<br>")}<div class="ts">${hm()}</div></div>`
+        : `${robotIconHtml}<div class="bubble">${esc(text).replace(/\n/g, "<br>")}<div class="ts">${hm()}</div></div>`;
+      document.getElementById("msgs").appendChild(d); scroll();
+    }
+
+    function addInquiryBubble() {
+      const d = document.createElement("div");
+      d.className = "msg ai-msg";
+      d.innerHTML = `${robotIconHtml}
+        <div class="bubble">
+          お問い合わせフォームより直接お問い合わせください。<br>
+          <button onclick="showInquiry()" style="margin-top:10px; padding:8px 12px; background:#ff6b35; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px; width:100%;">💬 お問合せフォーム</button>
+          <div class="ts">${hm()}</div>
+        </div>`;
+      document.getElementById("msgs").appendChild(d); scroll();
+    }
+
+    function scroll() { const m = document.getElementById("msgs"); setTimeout(() => m.scrollTop = m.scrollHeight, 50); }
+    function show(id) { document.getElementById(id).classList.add("show"); }
+    function hide(id) { document.getElementById(id).classList.remove("show"); }
+    function hm() { const n = new Date(); return n.getHours().toString().padStart(2, "0") + ":" + n.getMinutes().toString().padStart(2, "0"); }
+    function esc(t) { const d = document.createElement("div"); d.appendChild(document.createTextNode(t || "")); return d.innerHTML; }
+    function kd(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }
+    function resize(t) { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 110) + "px"; }
+  </script>
+</body>
+
+</html>
